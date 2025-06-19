@@ -7,6 +7,12 @@ import android.view.View;
 import android.widget.*;
 import androidx.appcompat.app.AppCompatActivity;
 
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+
 public class RegistroActivity extends AppCompatActivity {
 
     EditText etNombre, etCorreo, etContrasena;
@@ -45,21 +51,80 @@ public class RegistroActivity extends AppCompatActivity {
                     return;
                 }
 
-                // Guardar en SharedPreferences
-                SharedPreferences prefs = getSharedPreferences("usuarios", MODE_PRIVATE);
-                SharedPreferences.Editor editor = prefs.edit();
+                if (!esCorreoValido(correo)) {
+                    Toast.makeText(RegistroActivity.this, "Correo no válido", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                try {
+                    FileInputStream fis = openFileInput("usuarios.txt");
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(fis));
+                    String linea;
+                    boolean correoExistente = false;
+
+                    while ((linea = reader.readLine()) != null) {
+                        String[] datos = linea.split(",");
+                        if (datos.length >= 2 && datos[1].equalsIgnoreCase(correo)) {
+                            correoExistente = true;
+                            break;
+                        }
+                    }
+
+                    reader.close();
+                    fis.close();
+
+                    if (correoExistente) {
+                        Toast.makeText(RegistroActivity.this, "El correo ya está registrado. Inicie sesión.", Toast.LENGTH_LONG).show();
+
+                        // Redirigir al login
+                        Intent intent = new Intent(RegistroActivity.this, LoginActivity.class);
+                        startActivity(intent);
+                        finish();
+                        return; // Detener registro
+                    }
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+
+
+
+
+
+                // Guardar en archivo (usuarios.txt)
+                String registro = nombre + "," + correo + "," + contrasena + "," + tipo + "\n";
+                try {
+                    FileOutputStream fos = openFileOutput("usuarios.txt", MODE_APPEND); // Agrega al archivo
+                    fos.write(registro.getBytes());
+                    fos.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    Toast.makeText(RegistroActivity.this, "Error al guardar el usuario", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                // Guardar en SharedPreferences SOLO para sesión activa
+                SharedPreferences session = getSharedPreferences("sesion", MODE_PRIVATE);
+                SharedPreferences.Editor editor = session.edit();
                 editor.putString("nombre", nombre);
                 editor.putString("correo", correo);
-                editor.putString("contrasena", contrasena);
                 editor.putString("tipo", tipo);
                 editor.apply();
 
-                Toast.makeText(RegistroActivity.this, "Usuario registrado con éxito", Toast.LENGTH_SHORT).show();
+                Toast.makeText(RegistroActivity.this, "Usuario registrado", Toast.LENGTH_SHORT).show();
 
-                // Ir a Login
-                startActivity(new Intent(RegistroActivity.this, LoginActivity.class));
+                // Ir a pantalla de bienvenida
+                startActivity(new Intent(RegistroActivity.this, BienvenidaActivity.class));
                 finish();
             }
         });
+
+
+
+    }
+
+    public boolean esCorreoValido(String correo) {
+        return android.util.Patterns.EMAIL_ADDRESS.matcher(correo).matches();
     }
 }
