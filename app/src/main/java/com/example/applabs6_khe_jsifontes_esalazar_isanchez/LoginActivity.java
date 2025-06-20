@@ -76,41 +76,50 @@ public class LoginActivity extends AppCompatActivity {
                     BufferedReader reader = new BufferedReader(new InputStreamReader(fis));
                     String linea;
                     boolean encontrado = false;
+                    boolean correoExiste = false;
 
                     while ((linea = reader.readLine()) != null) {
-                        String[] datos = linea.split(",");
+                        String[] datos = linea.split("\\|");
                         if (datos.length == 4) {
                             String nombre = datos[0];
-                            String correoGuardado = datos[1];
-                            String contraGuardada = datos[2];
+                            String correoArchivo = datos[1];
+                            String contraArchivo = datos[2];
                             String tipo = datos[3];
 
-                            if (correo.equals(correoGuardado) && contrasena.equals(contraGuardada)) {
-                                // Guardar sesión
-                                SharedPreferences session = getSharedPreferences("sesion", MODE_PRIVATE);
-                                SharedPreferences.Editor editor = session.edit();
-                                editor.putString("nombre", nombre);
-                                editor.putString("correo", correoGuardado);
-                                editor.putString("tipo", tipo);
-                                editor.apply();
+                            if (correo.equals(correoArchivo)) {
+                                correoExiste = true;
+                                if (contrasena.equals(contraArchivo)) {
+                                    // Credenciales correctas
+                                    SharedPreferences session = getSharedPreferences("sesion", MODE_PRIVATE);
+                                    SharedPreferences.Editor editor = session.edit();
+                                    editor.putString("nombre", nombre);
+                                    editor.putString("correo", correoArchivo);
+                                    editor.putString("tipo", tipo);
+                                    editor.apply();
 
-                                encontrado = true;
-                                startActivity(new Intent(LoginActivity.this, BienvenidaActivity.class));
-                                finish();
-                                break;
+                                    encontrado = true;
+                                    startActivity(new Intent(LoginActivity.this, BienvenidaActivity.class));
+                                    finish();
+                                    break;
+                                }
                             }
                         }
                     }
+
                     reader.close();
                     fis.close();
 
-                    if (!encontrado) {
-                        Toast.makeText(LoginActivity.this, "Credenciales incorrectas", Toast.LENGTH_SHORT).show();
+                    if (!correoExiste) {
+                        Toast.makeText(LoginActivity.this, "El correo no está registrado", Toast.LENGTH_LONG).show();
+                    } else if (!encontrado) {
+                        Toast.makeText(LoginActivity.this, "Contraseña incorrecta", Toast.LENGTH_SHORT).show();
                     }
+
                 } catch (IOException e) {
                     e.printStackTrace();
-                    Toast.makeText(LoginActivity.this, "Error al leer archivo", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(LoginActivity.this, "Error al leer los usuarios", Toast.LENGTH_SHORT).show();
                 }
+
 
 
 

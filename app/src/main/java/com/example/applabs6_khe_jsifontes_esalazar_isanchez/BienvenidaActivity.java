@@ -1,8 +1,10 @@
 package com.example.applabs6_khe_jsifontes_esalazar_isanchez;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.text.InputType;
 import android.view.View;
 import android.widget.*;
 
@@ -16,6 +18,8 @@ public class BienvenidaActivity extends AppCompatActivity {
 
     TextView tvBienvenida, tvCorreo, tvTipo;
     Button btnAdmin, btnCerrarSesion;
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,21 +68,38 @@ public class BienvenidaActivity extends AppCompatActivity {
                 AlertDialog.Builder builder = new AlertDialog.Builder(BienvenidaActivity.this);
                 builder.setTitle("Crear Usuario Especial");
 
-                // Layout del formulario
+                // Crear un LinearLayout con buen espaciado
                 LinearLayout layout = new LinearLayout(BienvenidaActivity.this);
                 layout.setOrientation(LinearLayout.VERTICAL);
-                layout.setPadding(20, 20, 20, 20);
+                layout.setPadding(48, 24, 48, 24);
 
+                // Campo Nombre
                 final EditText etNombre = new EditText(BienvenidaActivity.this);
                 etNombre.setHint("Nombre");
+                etNombre.setLayoutParams(new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT));
+                etNombre.setPadding(16, 24, 16, 24);
                 layout.addView(etNombre);
 
+                // Campo Correo
                 final EditText etCorreo = new EditText(BienvenidaActivity.this);
-                etCorreo.setHint("Correo");
+                etCorreo.setHint("Correo electrónico");
+                etCorreo.setInputType(InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS);
+                etCorreo.setLayoutParams(new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT));
+                etCorreo.setPadding(16, 24, 16, 24);
                 layout.addView(etCorreo);
 
+                // Campo Contraseña
                 final EditText etContrasena = new EditText(BienvenidaActivity.this);
                 etContrasena.setHint("Contraseña");
+                etContrasena.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+                etContrasena.setLayoutParams(new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT));
+                etContrasena.setPadding(16, 24, 16, 24);
                 layout.addView(etContrasena);
 
                 builder.setView(layout);
@@ -87,17 +108,21 @@ public class BienvenidaActivity extends AppCompatActivity {
                     String nombre = etNombre.getText().toString().trim();
                     String correo = etCorreo.getText().toString().trim();
                     String contrasena = etContrasena.getText().toString().trim();
-                    String tipo = "4";  // Usuario especial
+                    String tipo = "4"; // Usuario especial
 
                     if (nombre.isEmpty() || correo.isEmpty() || contrasena.isEmpty()) {
                         Toast.makeText(BienvenidaActivity.this, "Debe completar todos los campos", Toast.LENGTH_SHORT).show();
                         return;
                     }
+                    if (!esCorreoValido(correo)) {
+                        Toast.makeText(BienvenidaActivity.this, "Correo no válido", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
 
-                    String registro = nombre + "," + correo + "," + contrasena + "," + tipo + "\n";
+                    String registro = nombre + "|" + correo + "|" + contrasena + "|" + tipo + "\n";
 
                     try {
-                        FileOutputStream fos = openFileOutput("usuarios.txt", MODE_APPEND); // Agregar sin borrar
+                        FileOutputStream fos = openFileOutput("usuarios.txt", MODE_APPEND);
                         fos.write(registro.getBytes());
                         fos.close();
                         Toast.makeText(BienvenidaActivity.this, "Usuario especial guardado", Toast.LENGTH_SHORT).show();
@@ -112,20 +137,32 @@ public class BienvenidaActivity extends AppCompatActivity {
             }
         });
 
-        Button btnCerrarSesion = findViewById(R.id.btnCerrarSesion);
+
+
         btnCerrarSesion.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                // Eliminar datos de la sesión
-                SharedPreferences session = getSharedPreferences("sesion", MODE_PRIVATE);
-                SharedPreferences.Editor editor = session.edit();
-                editor.clear();
-                editor.apply();
+                // Mostrar alerta de confirmación
+                new AlertDialog.Builder(BienvenidaActivity.this)
+                        .setTitle("Cerrar sesión")
+                        .setMessage("¿Estás seguro de que deseas cerrar sesión?")
+                        .setPositiveButton("Sí", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                // Eliminar datos de la sesión
+                                SharedPreferences session = getSharedPreferences("sesion", MODE_PRIVATE);
+                                SharedPreferences.Editor editor = session.edit();
+                                editor.clear();
+                                editor.apply();
 
-                // Volver al LoginActivity
-                Intent intent = new Intent(BienvenidaActivity.this, LoginActivity.class);
-                startActivity(intent);
-                finish();
+                                // Volver al LoginActivity
+                                Intent intent = new Intent(BienvenidaActivity.this, LoginActivity.class);
+                                startActivity(intent);
+                                finish();
+                            }
+                        })
+                        .setNegativeButton("No", null)
+                        .show();
             }
         });
 
@@ -133,5 +170,10 @@ public class BienvenidaActivity extends AppCompatActivity {
 
 
 
+
+    }
+
+    public boolean esCorreoValido(String correo) {
+        return android.util.Patterns.EMAIL_ADDRESS.matcher(correo).matches();
     }
 }

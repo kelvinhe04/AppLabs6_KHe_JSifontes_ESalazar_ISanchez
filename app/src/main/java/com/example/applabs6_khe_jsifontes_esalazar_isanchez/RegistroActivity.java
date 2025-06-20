@@ -17,7 +17,7 @@ public class RegistroActivity extends AppCompatActivity {
 
     EditText etNombre, etCorreo, etContrasena;
     Spinner spinnerTipoUsuario;
-    Button btnRegistrar;
+    Button btnRegistrar, btnVolverLogin;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,6 +29,7 @@ public class RegistroActivity extends AppCompatActivity {
         etContrasena = findViewById(R.id.etContrasena);
         spinnerTipoUsuario = findViewById(R.id.spinnerTipoUsuario);
         btnRegistrar = findViewById(R.id.btnRegistrar);
+        btnVolverLogin = findViewById(R.id.btnVolverLogin);
 
         // Cargar opciones del spinner
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this,
@@ -63,7 +64,7 @@ public class RegistroActivity extends AppCompatActivity {
                     boolean correoExistente = false;
 
                     while ((linea = reader.readLine()) != null) {
-                        String[] datos = linea.split(",");
+                        String[] datos = linea.split("\\|");
                         if (datos.length >= 2 && datos[1].equalsIgnoreCase(correo)) {
                             correoExistente = true;
                             break;
@@ -93,7 +94,7 @@ public class RegistroActivity extends AppCompatActivity {
 
 
                 // Guardar en archivo (usuarios.txt)
-                String registro = nombre + "," + correo + "," + contrasena + "," + tipo + "\n";
+                String registro = nombre + "|" + correo + "|" + contrasena + "|" + tipo + "\n";
                 try {
                     FileOutputStream fos = openFileOutput("usuarios.txt", MODE_APPEND); // Agrega al archivo
                     fos.write(registro.getBytes());
@@ -104,21 +105,25 @@ public class RegistroActivity extends AppCompatActivity {
                     return;
                 }
 
-                // Guardar en SharedPreferences SOLO para sesión activa
-                SharedPreferences session = getSharedPreferences("sesion", MODE_PRIVATE);
-                SharedPreferences.Editor editor = session.edit();
-                editor.putString("nombre", nombre);
-                editor.putString("correo", correo);
-                editor.putString("tipo", tipo);
-                editor.apply();
 
                 Toast.makeText(RegistroActivity.this, "Usuario registrado", Toast.LENGTH_SHORT).show();
 
                 // Ir a pantalla de bienvenida
-                startActivity(new Intent(RegistroActivity.this, BienvenidaActivity.class));
+                startActivity(new Intent(RegistroActivity.this, LoginActivity.class));
                 finish();
             }
         });
+
+
+        btnVolverLogin.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(RegistroActivity.this, LoginActivity.class);
+                startActivity(intent);
+                finish();
+            }
+        });
+
 
 
 
